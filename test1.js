@@ -24,7 +24,7 @@ async function hash(password) {
     const hashed_password = await bcrypt.hash(password, salt);
     console.log(hashed_password);
 }
-/* hash('333'); */
+/* hash('3333'); */
 
 const token = jwt.sign({username: 'Goran', password: '1234'}, config.get('jwtPrivateKey'));
 console.log(token);
