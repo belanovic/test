@@ -31,13 +31,10 @@ app.get('/film/:title/:year', async (req, res) => {
     })
     try {
         const saved_film = await new_film.save();
-        console.log(saved_film._id);
         res.status(200).send(`Film ${saved_film.title} saved to database`)
     }catch(err) {
-        console.log(err.message)
         res.send(err.message)
     }
-    console.log('posle greske')
     
 })
 
@@ -45,7 +42,6 @@ app.use(express.json({
     type: ['application/json', 'text/plain'],
     limit: '50mb'
 }));
-/* app.use(express.urlencoded({extended: true})); */
 
 app.use(function (req, res, next) {
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
@@ -55,24 +51,25 @@ app.use(function (req, res, next) {
     next()
 })
 
-
-
 app.get('/find', auth, async (req, res) => {
-    
-    const all_films = await Film.find()
-    res.json(all_films);
+    try {
+        const all_films = await Film.find()
+        return res.json(all_films);
+    } catch (error) {
+        res.json({error: error})
+    }
+
 })
 app.get('/find/:title', async (req, res) => {
     try {
         const films = await Film.findOne({title: req.params.title})
-        console.log(films)
         if(films) {
-            res.json([films])
+            return res.json(films)
         } else {
-            res.json(`The movie with the title ${req.params.title} wasn't found`);
+            return res.json(`The movie with the title ${req.params.title} wasn't found`);
         }
-    } catch(err) {
-
+    } catch(error) {
+        res.json({error: error})
     }
 })
 
@@ -117,6 +114,7 @@ function validate_data(user_data) {
 app.post('/login', async (req, res) => {
     console.log('evo meeeee');
     let login_message = {
+        username: '',
         logged_in: '',
         token: '',
         error_message: ''
@@ -148,19 +146,24 @@ app.post('/login', async (req, res) => {
         
         const token = jwt.sign(user_data, config.get('jwtPrivateKey'))
         login_message.logged_in = true;
+        login_message.username = user_data.username
         login_message.token = token;
         res.json(login_message);
 
     } catch (error) {
         login_message.logged_in = false;
         login_message.rror_message = error.message;
-        res.json(login_message);
+        return res.json(login_message);
     }
 })
 
 function auth(req, res, next) {
 
-    const token = req.headers.authorization.split(' ')[1];
-
-    next()
+    try {
+        const token = req.headers.authorization.split(' ')[1];
+        const decoded_payload = jwt.verify(token, config.get('jwtPrivateKey'));
+        next()
+    } catch (error) {
+        return res.json({error: error});
+    }
 }
