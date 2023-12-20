@@ -63,13 +63,13 @@ app.get('/find', auth_cookie, async (req, res) => {
     }
 
 })
-app.get('/find/:title', auth_cookie, async (req, res) => {
+app.post('/findFilm', auth_cookie, async (req, res) => {
     try {
-        const films = await Film.findOne({title: req.params.title})
-        if(films) {
-            return res.json(films)
+        const film = await Film.findOne({title: req.body.title})
+        if(film) {
+            return res.json(film)
         } else {
-            return res.json(`The movie with the title ${req.params.title} wasn't found`);
+            return res.json(`The movie with the title ${req.body.title} wasn't found`);
         }
     } catch(error) {
         res.json({error: modify_error(error)})
@@ -92,6 +92,7 @@ app.post('/register', async (req, res) => {
     }
     try {
         let user_data = _.pick(req.body, ['username', 'password']);
+        
         const {error} = validate_data(user_data);
         if(error) {
             registration_msg.registered = false;
@@ -106,8 +107,8 @@ app.post('/register', async (req, res) => {
         }
 
         const salt = await bcrypt.genSalt(5);
-        const crypted_password = await bcrypt.hash(user_data.password, salt);
-        user_data.password = crypted_password;
+        const password_hash = await bcrypt.hash(user_data.password, salt);
+        user_data.password = password_hash;
         
         const new_user = new User(user_data);
         const user_saved = await new_user.save();
@@ -136,11 +137,11 @@ app.post('/login', async (req, res) => {
     }
     try {
         const user_data = _.pick(req.body, ['username', 'password']);
+        
         const {error} = validate_data(user_data);
-
         if(error) {
             login_msg.logged_in = false;
-            login_msg.failure_msg = error.message
+            login_msg.failure_msg = error.message;
             return res.json({login_msg: login_msg});
         }
 
@@ -156,14 +157,13 @@ app.post('/login', async (req, res) => {
             login_msg.logged_in = false;
             login_msg.failure_msg = `Username or password are incorrect`;
             return res.json({login_msg: login_msg});
-
         }
         
-        const token = jwt.sign(user_data, config.get('jwtPrivateKey'), {expiresIn: '1h'});
+        const token = jwt.sign(user_data, config.get('jwtPrivateKey'), {expiresIn: '5m'});
         login_msg.logged_in = true;
         login_msg.username = user_data.username;
         login_msg.token = token;
-        return res.cookie('token', token, {/* httpOnly: true, */}).json({login_msg: login_msg});
+        return res.cookie('token', token, {/* httpOnly: true, */ sameSite: 'none', secure: true}).json({login_msg: login_msg});
 
     } catch (error) {
         return res.json({error: modify_error(error)});
@@ -174,11 +174,11 @@ app.post('/login', async (req, res) => {
 function auth_cookie(req, res, next) {
     try {
         const token = req.cookies.token;
-        console.log(token);
         const decoded_payload = jwt.verify(token, config.get('jwtPrivateKey'));
+        req.user_data = _.pick(decoded_payload, ['username', 'password']);
         next()
     } catch (error) {
-        return res.clearCookie('token').json({error: modify_error(error)});
+        return res.status(401).clearCookie('token').json({error: modify_error(error)});
     }
 }
 
