@@ -10,7 +10,7 @@ const Joi = require('joi');
 const config = require('config');
 const cookieParser = require('cookie-parser');
 
-
+  
 server.listen(2000, 'localhost', () => {console.log("Server is listening on port 2000")});
 
 const mongoAddress = `mongodb+srv://goran:1234@cluster0.pg5bd.mongodb.net/?retryWrites=true&w=majority`;
@@ -267,12 +267,12 @@ function validateData(type, user_data) {;
 /* function QueryMsg(itemName, isSuccess, result) {
     if(typeof itemName !== 'string' || typeof isSuccess !== 'boolean') {
         console.log('Parameters of the query message function are incorrect')
-        throw new Error('There seems to be a problem with the server code');
+        throw new Error('There seems to be a problem with the server codee');
     }
     if(isSuccess === true) {
         this.isSuccess = true;
         this[`${itemName}Found`] = result;
-    }
+    } 
     if(isSuccess === false) {
         this.isSuccess = false;
         this.failureMsg = result;
