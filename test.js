@@ -21,24 +21,12 @@ mongoose.connect(mongoAddress, { useNewUrlParser: true, useUnifiedTopology: true
 
 const schema_film = new mongoose.Schema({
     title: String,
+    genre: String,
     year: Number
 })
 
 const Film = mongoose.model('Film', schema_film);
 
-app.get('/film/:title/:year', async (req, res) => {
-    const new_film = new Film({
-        title: req.params.title,
-        year: req.params.year
-    })
-    try {
-        const saved_film = await new_film.save();
-        res.status(200).send(`Film ${saved_film.title} saved to database`)
-    }catch (error) {
-        res.json({error: modify_error(error)})
-    }
-    
-})
 
 app.use(express.json({
     type: ['application/json', 'text/plain'],
@@ -54,27 +42,51 @@ app.use(function (req, res, next) {
     next()
 })
 
-app.get('/find', auth_cookie, async (req, res) => {
+app.get('/allFilms', auth_cookie, async (req, res) => {
+
+    function QueryMsg(isSuccess, result) {
+        if(isSuccess) {
+            this.isSuccess = true;
+            this.filmsFound = result;
+        }
+        if(!isSuccess) {
+            this.isSuccess = false;
+            this.failureMsg = result;
+        }
+    }
+
     try {
         const all_films = await Film.find()
-        return res.json(all_films);
+        return res.json({queryMsg: new QueryMsg(true, all_films)});
     } catch (error) {
         res.json({error: modify_error(error)})
     }
 
 })
 app.post('/findFilm', auth_cookie, async (req, res) => {
+
+    function QueryMsg(isSuccess, result) {
+        this.isSuccess = isSuccess;
+        if(isSuccess) {
+            this.filmFound = result;
+        }
+        if(!isSuccess) {
+            this.failureMsg = result;
+        }
+    }
+
     try {
         const film = await Film.findOne({title: req.body.title})
         if(film) {
-            return res.json(film)
+            return res.json({queryMsg: new QueryMsg(true, film)})
         } else {
-            return res.json(`The movie with the title ${req.body.title} wasn't found`);
+            return res.json({queryMsg: new QueryMsg(false, `The movie with the title ${req.body.title} wasn't found`)});
         }
     } catch(error) {
         res.json({error: modify_error(error)})
     }
 })
+
 
 
 const user_schema = new mongoose.Schema({
@@ -84,25 +96,61 @@ const user_schema = new mongoose.Schema({
 const User = mongoose.model('User', user_schema);
 
 
+app.post('/postFilm', auth_cookie, async (req,res) => {
+    let postMsg = {
+        isSaved: '',
+        filmSaved: '',
+        failureMsg: ''
+    }
+    function PostMsg(isSuccess, result) {
+        this.isSuccess = isSuccess;
+        if(isSuccess) {
+            this.filmSaved = result;
+        }
+        if(!isSuccess) {
+            this.failureMsg = result;
+        }
+    }
+    try { 
+        const filmData = _.pick(req.body, ['title', 'genre', 'year']);
+
+        const {error} = validateData('film', filmData);
+        if(error) {
+            return res.json({postMsg: new PostMsg(false, error.message)});
+        }
+        const alreadyPosted = await Film.findOne({title: filmData.title});
+        if(alreadyPosted) {
+            return res.json({postMsg: new PostMsg(false, `Movie with the title ${alreadyPosted.title} is already in the database`)})
+        }
+        const newFilm = new Film(filmData);
+        const filmSaved = await newFilm.save();
+        return res.json({postMsg: new PostMsg(true, filmSaved)})
+
+    } catch (error) {
+        res.json({error: modify_error(error)});
+    }
+})
+
+
 app.post('/register', async (req, res) => {
     let registration_msg = {
         registered: '',
         username: '',
-        failure_msg: ''
+        failureMsg: ''
     }
     try {
         let user_data = _.pick(req.body, ['username', 'password']);
         
-        const {error} = validate_data(user_data);
+        const {error} = validateData('user', user_data);;
         if(error) {
             registration_msg.registered = false;
-            registration_msg.failure_msg = error.message;
+            registration_msg.failureMsg = error.message;
             return res.json({registration_msg: registration_msg});
         }
-        const username_taken = await User.findOne({username: user_data.username});
-        if(username_taken) {
+        const alreadyPosted = await User.findOne({username: user_data.username});
+        if(alreadyPosted) {
             registration_msg.registered = false;
-            registration_msg.failure_msg = `Username ${username_taken.username} is already taken`;
+            registration_msg.failureMsg = `Username ${alreadyPosted.username} is already taken`;
             return res.json({registration_msg: registration_msg});
         }
 
@@ -120,42 +168,36 @@ app.post('/register', async (req, res) => {
     }
 })
 
-function validate_data(user_data) {
-    const joi_schema = Joi.object({
-        username: Joi.string().min(3).max(15).required(),
-        password: Joi.string().min(3).max(15).required()
-    })
-    return joi_schema.validate(user_data);
-}
+
 
 app.post('/login', async (req, res) => {
     let login_msg = {
         logged_in: '',
         username: '',
         token: '',
-        failure_msg: ''
+        failureMsg: ''
     }
     try {
         const user_data = _.pick(req.body, ['username', 'password']);
         
-        const {error} = validate_data(user_data);
+        const {error} = validateData('user', user_data);;
         if(error) {
             login_msg.logged_in = false;
-            login_msg.failure_msg = error.message;
+            login_msg.failureMsg = error.message;
             return res.json({login_msg: login_msg});
         }
 
         const user_registered = await User.findOne({username: user_data.username});
         if(!user_registered) {
             login_msg.logged_in = false;
-            login_msg.failure_msg = `User with username ${user_data.username} doesn't exist`;
+            login_msg.failureMsg = `User with username ${user_data.username} doesn't exist`;
             return res.json({login_msg: login_msg});
         }
 
         const password_correct = await bcrypt.compare(user_data.password, user_registered.password);
         if(!password_correct) {
             login_msg.logged_in = false;
-            login_msg.failure_msg = `Username or password are incorrect`;
+            login_msg.failureMsg = `Username or password are incorrect`;
             return res.json({login_msg: login_msg});
         }
         
@@ -182,16 +224,6 @@ function auth_cookie(req, res, next) {
     }
 }
 
-/* function auth_header(req, res, next) {
-    try {
-        const token = req.headers.authorization.split(' ')[1];
-        const decoded_payload = jwt.verify(token, config.get('jwtPrivateKey'));
-        next()
-    } catch (error) {
-        return res.json({error: modify_error(error)});
-    }
-} */
-
 function modify_error(err) {
     if(err.name =='MongooseError'
     || err.name =='CastError'
@@ -212,3 +244,38 @@ function modify_error(err) {
     const stringified_error = JSON.stringify(err, Object.getOwnPropertyNames(err));
     return JSON.parse(stringified_error)
 }
+
+function validateData(type, user_data) {;
+    let joi_schema;
+    if(type == 'user') {
+        joi_schema = Joi.object({
+            username: Joi.string().min(3).max(15).required(),
+            password: Joi.string().min(3).max(15).required()
+        })
+    } else if(type == 'film')  {
+        joi_schema = Joi.object({
+            title: Joi.string().min(1).max(155).required(),
+            genre: Joi.string().min(2).max(30).required(),
+            year: Joi.number().integer().min(0).max(2024).required()
+        })
+    } else {
+        return
+    }
+    return joi_schema.validate(user_data);
+}
+
+/* function QueryMsg(itemName, isSuccess, result) {
+    if(typeof itemName !== 'string' || typeof isSuccess !== 'boolean') {
+        console.log('Parameters of the query message function are incorrect')
+        throw new Error('There seems to be a problem with the server code');
+    }
+    if(isSuccess === true) {
+        this.isSuccess = true;
+        this[`${itemName}Found`] = result;
+    }
+    if(isSuccess === false) {
+        this.isSuccess = false;
+        this.failureMsg = result;
+    }
+} */
+
