@@ -9,7 +9,7 @@ const _ = require('lodash');
 const Joi = require('joi');
 const config = require('config');
 const cookieParser = require('cookie-parser');
-/* neki koementari jos jedan */
+/* neki koementari jos jedan jos jedan*/
   
 server.listen(2000, 'localhost', () => {console.log("Server is listening on port 2000")});
 
