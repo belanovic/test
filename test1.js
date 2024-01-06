@@ -26,7 +26,25 @@ async function hash(password) {
 }
 /* hash('3333'); */
 
-const token = jwt.sign({username: 'Goran', password: '1234'}, config.get('jwtPrivateKey'));
+/* const token = jwt.sign({username: 'Goran', password: '1234'}, config.get('jwtPrivateKey'));
 console.log(token);
 const decoded_payload = jwt.verify(token, config.get('jwtPrivateKey'));
-console.log(decoded_payload);
+console.log(decoded_payload); */
+
+
+/* process.env.TZ = "Europe/Belgrade"; */
+/* process.env.TZ = "America/Montreal"; */
+
+const options = {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric',
+    weekday: 'long'
+}
+console.log(new Date());
+console.log(new Date().toLocaleString('sr-RS', options))
+console.log(new Date().toLocaleDateString('sr-RS'))
+console.log(new Date().toLocaleTimeString('sr-RS'))

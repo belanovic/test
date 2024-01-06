@@ -9,7 +9,7 @@ const _ = require('lodash');
 const Joi = require('joi');
 const config = require('config');
 const cookieParser = require('cookie-parser');
-/* neki koementari jos jedan jos jedan*/
+/* neki koementari jos jedan jos jedan*/ 
   
 server.listen(2000, 'localhost', () => {console.log("Server is listening on port 2000")});
 
@@ -28,17 +28,20 @@ const schema_film = new mongoose.Schema({
 const Film = mongoose.model('Film', schema_film);
 
 
+app.use(cookieParser());
+
 app.use(express.json({
     type: ['application/json', 'text/plain'],
     limit: '50mb'
 }));
-app.use(cookieParser());
+
+
 
 app.use(function (req, res, next) {
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
-    res.setHeader('Access-Control-Allow-Credentials', true);
-    res.setHeader("Access-Control-Allow-Headers", "Access-Control-Allow-Headers, Origin, Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers, Authorization, Credentials");
+    res.setHeader("Access-Control-Allow-Headers", "Origin, Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers, Authorization");
     res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
+    res.setHeader('Access-Control-Allow-Credentials', true);
     next()
 })
 
@@ -201,7 +204,7 @@ app.post('/login', async (req, res) => {
             return res.json({login_msg: login_msg});
         }
         
-        const token = jwt.sign(user_data, config.get('jwtPrivateKey'), {expiresIn: '5m'});
+        const token = jwt.sign(user_data, config.get('jwtPrivateKey'), {expiresIn: '55m'});
         login_msg.logged_in = true;
         login_msg.username = user_data.username;
         login_msg.token = token;
