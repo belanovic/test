@@ -1,0 +1,14 @@
+{
+  "name": "modifyerror",
+  "version": "1.0.2",
+  "description": "modifies the Error object so it can be sent as response of nodejs server",
+  "main": "modifyerror.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Goran Belanovic",
+  "license": "ISC",
+  "keywords": [
+    "Error"
+  ]
+}

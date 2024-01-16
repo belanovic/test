@@ -1,14 +1,13 @@
 {
-  "name": "test",
-  "version": "1.0.0",
-  "description": "",
+  "name": "modifyerror",
+  "version": "1.0.2",
   "main": "test.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "upload": "git add . && git commit -m 'msg' && git push"
   },
   "keywords": [],
-  "author": "",
+  "author": "Goran Belanovic",
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^5.1.1",
@@ -18,7 +17,10 @@
     "joi": "^17.11.0",
     "jsonwebtoken": "^9.0.2",
     "lodash": "^4.17.21",
+    "modifyerror": "^1.0.1",
     "mongoose": "^7.6.3",
     "serialize-error": "^11.0.3"
-  }
+  },
+  "description": "returns modified error object so it could be sent in server response in nodejs",
+  "devDependencies": {}
 }

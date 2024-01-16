@@ -3,7 +3,7 @@ const app = express();
 const http = require('http');
 const server = http.createServer(app);
 const mongoose = require('mongoose');
-const jwt = require('jsonwebtoken');
+const jwt = require('jsonwebtoken'); 
 const bcrypt = require('bcrypt');
 const _ = require('lodash');
 const Joi = require('joi');
@@ -62,7 +62,7 @@ app.get('/allFilms', auth_cookie, async (req, res) => {
         const all_films = await Film.find()
         return res.json({queryMsg: new QueryMsg(true, all_films)});
     } catch (error) {
-        res.json({error: modify_error(error)})
+        res.json({error: modifyError(error)})
     }
 
 })
@@ -86,7 +86,7 @@ app.post('/findFilm', auth_cookie, async (req, res) => {
             return res.json({queryMsg: new QueryMsg(false, `The movie with the title ${req.body.title} wasn't found`)});
         }
     } catch(error) {
-        res.json({error: modify_error(error)})
+        res.json({error: modifyError(error)})
     }
 })
 
@@ -130,7 +130,7 @@ app.post('/postFilm', auth_cookie, async (req,res) => {
         return res.json({postMsg: new PostMsg(true, filmSaved)})
 
     } catch (error) {
-        res.json({error: modify_error(error)});
+        res.json({error: modifyError(error)});
     }
 })
 
@@ -167,7 +167,7 @@ app.post('/register', async (req, res) => {
         registration_msg.username = user_saved.username;
         return res.json({registration_msg: registration_msg});
     } catch (error) {
-        return res.json({error: modify_error(error)});
+        return res.json({error: modifyError(error)});
     }
 })
 
@@ -211,7 +211,7 @@ app.post('/login', async (req, res) => {
         return res.cookie('token', token, {/* httpOnly: true, */ sameSite: 'none', secure: true}).json({login_msg: login_msg});
 
     } catch (error) {
-        return res.json({error: modify_error(error)});
+        return res.json({error: modifyError(error)});
     }
 })
 
@@ -223,29 +223,29 @@ function auth_cookie(req, res, next) {
         req.user_data = _.pick(decoded_payload, ['username', 'password']);
         next()
     } catch (error) {
-        return res.status(401).clearCookie('token').json({error: modify_error(error)});
+        return res.status(401).clearCookie('token').json({error: modifyError(error)});
     }
 }
 
-function modify_error(err) {
-    if(err.name =='MongooseError'
-    || err.name =='CastError'
-    || err.name =='DivergentArrayError'
-    || err.name =='MissingSchemaError'
-    || err.name =='DocumentNotFoundError'
-    || err.name =='ValidatorError'
-    || err.name =='ValidationError'
-    || err.name =='MissingSchemaError'
-    || err.name =='ObjectExpectedError'
-    || err.name =='ObjectParameterError'
-    || err.name =='OverwriteModelError'
-    || err.name =='ParallelSaveError'
-    || err.name =='StrictModeError'
-    || err.name =='VersionError') {
-        err.message = `Problem with the database. ${err.name}`;
+function modifyError(error) {
+    if(error.name =='MongooseError'
+    || error.name =='CastError'
+    || error.name =='DivergentArrayError'
+    || error.name =='MissingSchemaError'
+    || error.name =='DocumentNotFoundError'
+    || error.name =='ValidatorError'
+    || error.name =='ValidationError'
+    || error.name =='MissingSchemaError'
+    || error.name =='ObjectExpectedError'
+    || error.name =='ObjectParameterError'
+    || error.name =='OverwriteModelError'
+    || error.name =='ParallelSaveError'
+    || error.name =='StrictModeError'
+    || error.name =='VersionError') {
+        error.message = `Problem with the database. ${error.name}`;
     }
-    const stringified_error = JSON.stringify(err, Object.getOwnPropertyNames(err));
-    return JSON.parse(stringified_error)
+    const stringifiedError = JSON.stringify(error, Object.getOwnPropertyNames(error));
+    return JSON.parse(stringifiedError)
 }
 
 function validateData(type, user_data) {;
