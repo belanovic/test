@@ -44,7 +44,10 @@ const options = {
     day: 'numeric',
     weekday: 'long'
 }
-console.log(new Date());
+/* console.log(new Date());
 console.log(new Date().toLocaleString('sr-RS', options))
 console.log(new Date().toLocaleDateString('sr-RS'))
-console.log(new Date().toLocaleTimeString('sr-RS'))
+console.log(new Date().toLocaleTimeString('sr-RS')) */
+
+let a = [''].map((prom) => console.log(prom));
+console.log(a)
