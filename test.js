@@ -222,7 +222,7 @@ function auth_cookie(req, res, next) {
         const decoded_payload = jwt.verify(token, config.get('jwtPrivateKey'));
         req.user_data = _.pick(decoded_payload, ['username', 'password']);
         next()
-    } catch (error) {
+    } catch (error) { 
         return res.status(401).clearCookie('token').json({error: modifyError(error)});
     }
 }
